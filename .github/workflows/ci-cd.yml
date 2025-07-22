@@ -1,0 +1,380 @@
+name: Disaster Response System CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Test Job
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.11, 3.12]
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+      
+      qdrant:
+        image: qdrant/qdrant:latest
+        ports:
+          - 6333:6333
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-asyncio
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y librdkafka-dev
+    
+    - name: Set up test environment
+      run: |
+        cp configs/testing.env .env
+        mkdir -p logs
+        mkdir -p trained_models
+    
+    - name: Lint with flake8
+      run: |
+        pip install flake8
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    
+    - name: Type checking with mypy
+      run: |
+        pip install mypy
+        mypy . --ignore-missing-imports || true
+    
+    - name: Security scan with bandit
+      run: |
+        pip install bandit[toml]
+        bandit -r . -f json -o bandit-report.json || true
+    
+    - name: Train test models
+      run: |
+        python train_models.py
+      env:
+        ENVIRONMENT: testing
+    
+    - name: Run unit tests
+      run: |
+        pytest tests/ -v --cov=. --cov-report=xml --cov-report=html
+      env:
+        ENVIRONMENT: testing
+        REDIS_HOST: localhost
+        QDRANT_HOST: localhost
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ matrix.python-version }}
+        path: |
+          htmlcov/
+          bandit-report.json
+
+  # Build Job
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    outputs:
+      backend-image: ${{ steps.meta-backend.outputs.tags }}
+      frontend-image: ${{ steps.meta-frontend.outputs.tags }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata for backend
+      id: meta-backend
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: ${{ steps.meta-backend.outputs.tags }}
+        labels: ${{ steps.meta-backend.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Extract metadata for frontend
+      id: meta-frontend
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        file: ./frontend/Dockerfile
+        push: true
+        tags: ${{ steps.meta-frontend.outputs.tags }}
+        labels: ${{ steps.meta-frontend.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # Security Scan Job
+  security:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ needs.build.outputs.backend-image }}
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # Deploy to Staging
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [test, build, security]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+    
+    - name: Install kubectl
+      uses: azure/setup-kubectl@v3
+    
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig --region us-east-1 --name disaster-response-staging
+    
+    - name: Deploy to staging
+      run: |
+        envsubst < deployment/kubernetes/backend-deployment.yaml | kubectl apply -f -
+        envsubst < deployment/kubernetes/frontend-deployment.yaml | kubectl apply -f -
+        kubectl rollout status deployment/backend -n disaster-response-staging --timeout=300s
+        kubectl rollout status deployment/frontend -n disaster-response-staging --timeout=300s
+      env:
+        BACKEND_IMAGE: ${{ needs.build.outputs.backend-image }}
+        FRONTEND_IMAGE: ${{ needs.build.outputs.frontend-image }}
+        ENVIRONMENT: staging
+    
+    - name: Run integration tests
+      run: |
+        kubectl wait --for=condition=ready pod -l app=backend -n disaster-response-staging --timeout=300s
+        python tests/integration_tests.py
+      env:
+        API_BASE_URL: https://staging-api.disaster-response.com
+        TEST_USERNAME: ${{ secrets.STAGING_TEST_USERNAME }}
+        TEST_PASSWORD: ${{ secrets.STAGING_TEST_PASSWORD }}
+
+  # Deploy to Production
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [test, build, security, deploy-staging]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+    
+    - name: Install kubectl
+      uses: azure/setup-kubectl@v3
+    
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig --region us-east-1 --name disaster-response-production
+    
+    - name: Create backup
+      run: |
+        kubectl create job backup-$(date +%Y%m%d-%H%M%S) --from=cronjob/backup-job -n disaster-response-production
+    
+    - name: Deploy to production
+      run: |
+        envsubst < deployment/kubernetes/backend-deployment.yaml | kubectl apply -f -
+        envsubst < deployment/kubernetes/frontend-deployment.yaml | kubectl apply -f -
+        kubectl rollout status deployment/backend -n disaster-response-production --timeout=600s
+        kubectl rollout status deployment/frontend -n disaster-response-production --timeout=600s
+      env:
+        BACKEND_IMAGE: ${{ needs.build.outputs.backend-image }}
+        FRONTEND_IMAGE: ${{ needs.build.outputs.frontend-image }}
+        ENVIRONMENT: production
+    
+    - name: Verify deployment
+      run: |
+        kubectl get pods -n disaster-response-production
+        kubectl get services -n disaster-response-production
+        curl -f https://api.disaster-response.com/health || exit 1
+    
+    - name: Notify deployment
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        message: |
+          Disaster Response System deployed to production
+          Backend: ${{ needs.build.outputs.backend-image }}
+          Frontend: ${{ needs.build.outputs.frontend-image }}
+      if: always()
+
+  # Performance Testing
+  performance-test:
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    
+    - name: Install dependencies
+      run: |
+        pip install locust requests
+    
+    - name: Run load tests
+      run: |
+        python tests/load_test.py --host https://staging-api.disaster-response.com --users 50 --spawn-rate 5 --run-time 5m
+    
+    - name: Upload performance results
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-results
+        path: performance-results.html
+
+  # Cleanup Job
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: always()
+    
+    steps:
+    - name: Cleanup old images
+      run: |
+        # Keep last 5 images, remove older ones
+        echo "Cleanup would remove old container images"
+        # Implementation depends on registry type
+
+# Workflow for scheduled tasks
+  scheduled-tasks:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Update dependencies
+      run: |
+        pip install --upgrade pip-tools
+        pip-compile --upgrade requirements.in
+    
+    - name: Security audit
+      run: |
+        pip install safety
+        safety check
+    
+    - name: Create dependency update PR
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: 'chore: update dependencies'
+        title: 'Automated dependency updates'
+        body: 'This PR contains automated dependency updates.'
+        branch: chore/dependency-updates

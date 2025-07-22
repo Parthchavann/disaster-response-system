@@ -1,0 +1,168 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: disaster-response
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    
+    rule_files:
+      - "/etc/prometheus/rules/*.yml"
+    
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+              - alertmanager:9093
+    
+    scrape_configs:
+      - job_name: 'prometheus'
+        static_configs:
+          - targets: ['localhost:9090']
+      
+      - job_name: 'disaster-response-backend'
+        static_configs:
+          - targets: ['disaster-response-backend-service:8000']
+        metrics_path: '/metrics'
+        scrape_interval: 10s
+      
+      - job_name: 'kafka'
+        static_configs:
+          - targets: ['kafka-service:9092']
+      
+      - job_name: 'redis'
+        static_configs:
+          - targets: ['redis-service:6379']
+      
+      - job_name: 'qdrant'
+        static_configs:
+          - targets: ['qdrant-service:6333']
+      
+      - job_name: 'kubernetes-pods'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - disaster-response
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+  
+  alerts.yml: |
+    groups:
+      - name: disaster-response-alerts
+        rules:
+          - alert: HighDisasterEventRate
+            expr: rate(disaster_events_total[5m]) > 10
+            for: 2m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High disaster event rate detected"
+              description: "Disaster event rate is {{ $value }} events/second"
+          
+          - alert: CriticalEventDetected
+            expr: disaster_events_critical_total > 0
+            for: 0m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Critical disaster event detected"
+              description: "{{ $value }} critical disaster events detected"
+          
+          - alert: APIHighErrorRate
+            expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High API error rate"
+              description: "API error rate is {{ $value }}%"
+          
+          - alert: DatabaseConnectionFailed
+            expr: up{job="qdrant"} == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Database connection failed"
+              description: "Qdrant database is not responding"
+          
+          - alert: PodCrashLooping
+            expr: rate(kube_pod_container_status_restarts_total[15m]) > 0
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Pod crash looping"
+              description: "Pod {{ $labels.pod }} is crash looping"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: disaster-response
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:latest
+        args:
+          - '--config.file=/etc/prometheus/prometheus.yml'
+          - '--storage.tsdb.path=/prometheus/'
+          - '--web.console.libraries=/etc/prometheus/console_libraries'
+          - '--web.console.templates=/etc/prometheus/consoles'
+          - '--storage.tsdb.retention.time=200h'
+          - '--web.enable-lifecycle'
+        ports:
+        - containerPort: 9090
+        volumeMounts:
+        - name: prometheus-config-volume
+          mountPath: /etc/prometheus/
+        - name: prometheus-storage-volume
+          mountPath: /prometheus/
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "1000m"
+      volumes:
+      - name: prometheus-config-volume
+        configMap:
+          name: prometheus-config
+      - name: prometheus-storage-volume
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+  namespace: disaster-response
+spec:
+  selector:
+    app: prometheus
+  ports:
+  - protocol: TCP
+    port: 9090
+    targetPort: 9090
+  type: ClusterIP

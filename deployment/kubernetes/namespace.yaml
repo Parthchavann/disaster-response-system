@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: disaster-response
+  labels:
+    name: disaster-response
+    environment: production
