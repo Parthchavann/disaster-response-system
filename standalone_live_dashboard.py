@@ -14,7 +14,7 @@ import time
 import random
 
 class LiveDashboardHandler(BaseHTTPRequestHandler):
-    API_BASE_URL = "http://localhost:8000"
+    API_BASE_URL = "http://localhost:9999"  # Use non-existent port to force mock data
     
     def do_GET(self):
         """Handle GET requests"""
