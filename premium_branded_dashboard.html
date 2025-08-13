@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RescueScope AI - Premium Disaster Response Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        :root {
+            /* Premium Brand Colors */
+            --brand-primary: #1a73e8;
+            --brand-secondary: #34a853;
+            --brand-accent: #ff6d01;
+            --brand-danger: #ea4335;
+            --brand-warning: #fbbc04;
+            
+            /* Sophisticated Color Palette */
+            --surface-primary: #ffffff;
+            --surface-secondary: #f8fafc;
+            --surface-tertiary: #f1f5f9;
+            --surface-dark: #0f172a;
+            --surface-card: #ffffff;
+            
+            /* Text Colors */
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --text-tertiary: #94a3b8;
+            --text-inverse: #ffffff;
+            
+            /* Border & Shadows */
+            --border-light: #e2e8f0;
+            --border-medium: #cbd5e1;
+            --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            
+            /* Layout */
+            --sidebar-width: 300px;
+            --header-height: 80px;
+            --radius-xs: 6px;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            
+            /* Gradients */
+            --gradient-brand: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+            --gradient-danger: linear-gradient(135deg, var(--brand-danger) 0%, #ff8a80 100%);
+            --gradient-warning: linear-gradient(135deg, var(--brand-warning) 0%, #ffd54f 100%);
+            --gradient-surface: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--surface-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-feature-settings: 'cv08', 'cv09', 'cv11';
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Premium Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--surface-card);
+            border-right: 1px solid var(--border-light);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+            background: var(--gradient-brand);
+            color: var(--text-inverse);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.05" fill-rule="nonzero"><circle cx="30" cy="30" r="30"/></g></svg>') repeat;
+            pointer-events: none;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .brand-text {
+            flex: 1;
+        }
+
+        .brand-name {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.25rem;
+        }
+
+        .brand-tagline {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .sidebar-nav {
+            padding: 1.5rem 0;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-tertiary);
+            padding: 0 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.875rem 1.5rem;
+            margin: 0.125rem 0.75rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .nav-item:hover {
+            background: var(--surface-tertiary);
+            color: var(--text-primary);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--gradient-brand);
+            color: var(--text-inverse);
+            box-shadow: var(--shadow-md);
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: -0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 24px;
+            background: var(--text-inverse);
+            border-radius: 2px;
+        }
+
+        .nav-icon {
+            width: 20px;
+            text-align: center;
+            font-size: 1.125rem;
+        }
+
+        .nav-text {
+            font-size: 0.925rem;
+        }
+
+        .system-status {
+            margin: 1.5rem 0.75rem 2rem;
+            padding: 1.5rem;
+            background: var(--gradient-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--brand-secondary);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.875rem;
+        }
+
+        .status-title {
+            font-size: 0.925rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-light);
+            margin-bottom: 0.75rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--brand-secondary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+
+        .status-text {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .status-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .status-metric {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--brand-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            min-height: 100vh;
+            background: var(--surface-secondary);
+        }
+
+        .app-header {
+            height: var(--header-height);
+            background: var(--surface-card);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .page-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .breadcrumb-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .breadcrumb-separator {
+            color: var(--text-tertiary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .notification-badge {
+            position: relative;
+            padding: 0.5rem;
+            border-radius: var(--radius-sm);
+            background: var(--surface-tertiary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .notification-badge:hover {
+            background: var(--surface-secondary);
+            color: var(--text-primary);
+        }
+
+        .notification-count {
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            width: 16px;
+            height: 16px;
+            background: var(--brand-danger);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.625rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .content-wrapper {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Premium Alert Banner */
+        .alert-banner {
+            background: var(--gradient-brand);
+            color: var(--text-inverse);
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alert-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+            transform: translateX(-100%);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .alert-icon {
+            font-size: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .alert-text {
+            opacity: 0.9;
+            font-size: 0.925rem;
+        }
+
+        /* Page Content */
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.25rem;
+            font-weight: 800;
+            background: var(--gradient-brand);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        .page-subtitle {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Premium Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--brand-primary);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient-brand);
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            background: var(--gradient-brand);
+            box-shadow: var(--shadow-md);
+        }
+
+        .metric-trend {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--radius-sm);
+        }
+
+        .metric-trend.positive {
+            background: rgba(52, 168, 83, 0.1);
+            color: var(--brand-secondary);
+        }
+
+        .metric-trend.negative {
+            background: rgba(234, 67, 53, 0.1);
+            color: var(--brand-danger);
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .metric-label {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .content-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+        }
+
+        .content-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-light);
+            background: var(--surface-tertiary);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card-icon {
+            width: 24px;
+            text-align: center;
+            color: var(--brand-primary);
+        }
+
+        .card-content {
+            padding: 2rem;
+        }
+
+        /* Forms & Inputs */
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.925rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            background: var(--surface-card);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+
+        /* Premium Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.925rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            background: var(--gradient-brand);
+            color: var(--text-inverse);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        /* Event List */
+        .event-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .event-item {
+            padding: 1.5rem 0;
+            border-bottom: 1px solid var(--border-light);
+            transition: all 0.2s ease;
+        }
+
+        .event-item:hover {
+            background: var(--surface-tertiary);
+            margin: 0 -1rem;
+            padding: 1.5rem 1rem;
+            border-radius: var(--radius-md);
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .event-type {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .event-earthquake { background: rgba(234, 67, 53, 0.1); color: var(--brand-danger); }
+        .event-fire { background: rgba(255, 109, 1, 0.1); color: var(--brand-accent); }
+        .event-flood { background: rgba(26, 115, 232, 0.1); color: var(--brand-primary); }
+        .event-hurricane { background: rgba(156, 163, 175, 0.2); color: var(--text-secondary); }
+        .event-tornado { background: rgba(139, 69, 19, 0.1); color: #8b4513; }
+
+        .event-severity {
+            padding: 0.375rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .severity-critical { background: var(--brand-danger); color: white; }
+        .severity-high { background: var(--brand-accent); color: white; }
+        .severity-medium { background: var(--brand-warning); color: var(--text-primary); }
+        .severity-low { background: var(--brand-secondary); color: white; }
+
+        .event-text {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .event-meta {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+        }
+
+        .event-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            height: 400px;
+            margin-top: 1rem;
+        }
+
+        /* Prediction Results */
+        .prediction-result {
+            background: var(--gradient-surface);
+            border: 2px solid var(--brand-secondary);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-top: 1.5rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-icon {
+            font-size: 2rem;
+        }
+
+        .result-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .result-item {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--surface-card);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-light);
+        }
+
+        .result-value {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .result-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 4rem;
+            padding: 2rem 0;
+            border-top: 1px solid var(--border-light);
+            text-align: center;
+            color: var(--text-secondary);
+            background: var(--surface-card);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 1rem;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-title {
+                font-size: 1.875rem;
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Premium Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-logo">
+                    <div class="brand-icon">
+                        <i class="fas fa-shield-virus"></i>
+                    </div>
+                    <div class="brand-text">
+                        <div class="brand-name">RescueScope AI</div>
+                        <div class="brand-tagline">Disaster Intelligence Platform</div>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Dashboard</div>
+                    <div class="nav-item active" onclick="showPage('overview')">
+                        <i class="nav-icon fas fa-chart-pie"></i>
+                        <span class="nav-text">Overview</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('prediction')">
+                        <i class="nav-icon fas fa-brain"></i>
+                        <span class="nav-text">AI Prediction</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('analytics')">
+                        <i class="nav-icon fas fa-chart-line"></i>
+                        <span class="nav-text">Analytics</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('events')">
+                        <i class="nav-icon fas fa-list-alt"></i>
+                        <span class="nav-text">Event Management</span>
+                    </div>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Tools</div>
+                    <div class="nav-item">
+                        <i class="nav-icon fas fa-map-marked-alt"></i>
+                        <span class="nav-text">Live Map</span>
+                    </div>
+                    <div class="nav-item">
+                        <i class="nav-icon fas fa-bell"></i>
+                        <span class="nav-text">Alerts</span>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="system-status">
+                <div class="status-header">
+                    <div class="status-icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <div class="status-title">System Status</div>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <div class="status-text">AI Models Online</div>
+                </div>
+                <div class="status-metrics">
+                    <div class="status-metric">
+                        <div class="metric-value" id="events-processed">1,247</div>
+                        <div class="metric-label">Events</div>
+                    </div>
+                    <div class="status-metric">
+                        <div class="metric-value">99.9%</div>
+                        <div class="metric-label">Uptime</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- App Header -->
+            <header class="app-header">
+                <div class="header-content">
+                    <div class="page-breadcrumb">
+                        <div class="breadcrumb-item">
+                            <i class="fas fa-home"></i>
+                            <span>RescueScope AI</span>
+                        </div>
+                        <span class="breadcrumb-separator">/</span>
+                        <div class="breadcrumb-item">
+                            <span id="current-page">Overview</span>
+                        </div>
+                    </div>
+                    <div class="header-actions">
+                        <div class="notification-badge">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-count">3</span>
+                        </div>
+                        <div class="notification-badge">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Premium Alert Banner -->
+                <div class="alert-banner">
+                    <i class="alert-icon fas fa-robot"></i>
+                    <div class="alert-content">
+                        <div class="alert-title">AI-Powered Real-Time Analysis Active</div>
+                        <div class="alert-text">Connected to advanced ML models • Backend API: localhost:8000 • Dashboard: localhost:8504</div>
+                    </div>
+                </div>
+
+                <!-- Overview Page -->
+                <div id="overview-page" class="page active">
+                    <div class="page-header">
+                        <h1 class="page-title">Emergency Response Overview</h1>
+                        <p class="page-subtitle">Real-time disaster monitoring and AI-powered threat detection across global regions</p>
+                    </div>
+
+                    <!-- Premium Metrics -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="metric-trend positive">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>+12%</span>
+                                </div>
+                            </div>
+                            <div class="metric-value">1,247</div>
+                            <div class="metric-label">Total Events Detected</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-icon">
+                                    <i class="fas fa-bell"></i>
+                                </div>
+                                <div class="metric-trend negative">
+                                    <i class="fas fa-arrow-down"></i>
+                                    <span>-3</span>
+                                </div>
+                            </div>
+                            <div class="metric-value">23</div>
+                            <div class="metric-label">Active Critical Alerts</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-icon">
+                                    <i class="fas fa-globe-americas"></i>
+                                </div>
+                                <div class="metric-trend positive">
+                                    <i class="fas fa-check"></i>
+                                    <span>Global</span>
+                                </div>
+                            </div>
+                            <div class="metric-value">195</div>
+                            <div class="metric-label">Regions Monitored</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-icon">
+                                    <i class="fas fa-heartbeat"></i>
+                                </div>
+                                <div class="metric-trend positive">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>30d</span>
+                                </div>
+                            </div>
+                            <div class="metric-value">99.9%</div>
+                            <div class="metric-label">System Availability</div>
+                        </div>
+                    </div>
+
+                    <!-- Content Grid -->
+                    <div class="content-grid">
+                        <div class="content-card">
+                            <div class="card-header">
+                                <h2 class="card-title">
+                                    <i class="card-icon fas fa-chart-pie"></i>
+                                    Disaster Distribution Analysis
+                                </h2>
+                            </div>
+                            <div class="card-content">
+                                <div id="disaster-chart" class="chart-container"></div>
+                            </div>
+                        </div>
+
+                        <div class="content-card">
+                            <div class="card-header">
+                                <h2 class="card-title">
+                                    <i class="card-icon fas fa-clock"></i>
+                                    Live Event Feed
+                                </h2>
+                            </div>
+                            <div class="card-content">
+                                <div id="recent-events-list" class="event-list">
+                                    <div class="event-item">
+                                        <div class="event-header">
+                                            <span class="event-type event-earthquake">🌍 EARTHQUAKE</span>
+                                            <span class="event-severity severity-high">HIGH</span>
+                                        </div>
+                                        <div class="event-text">"Magnitude 6.2 earthquake detected near Tokyo, Japan. Buildings experiencing significant tremors..."</div>
+                                        <div class="event-meta">
+                                            <div class="event-meta-item">
+                                                <i class="fas fa-percentage"></i>
+                                                <span>92.3% confidence</span>
+                                            </div>
+                                            <div class="event-meta-item">
+                                                <i class="fas fa-clock"></i>
+                                                <span>2 minutes ago</span>
+                                            </div>
+                                            <div class="event-meta-item">
+                                                <i class="fas fa-map-marker-alt"></i>
+                                                <span>35.6762, 139.6503</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="event-item">
+                                        <div class="event-header">
+                                            <span class="event-type event-fire">🔥 WILDFIRE</span>
+                                            <span class="event-severity severity-critical">CRITICAL</span>
+                                        </div>
+                                        <div class="event-text">"Rapid wildfire spread through California forests. Immediate evacuation protocols activated..."</div>
+                                        <div class="event-meta">
+                                            <div class="event-meta-item">
+                                                <i class="fas fa-percentage"></i>
+                                                <span>87.1% confidence</span>
+                                            </div>
+                                            <div class="event-meta-item">
+                                                <i class="fas fa-clock"></i>
+                                                <span>5 minutes ago</span>
+                                            </div>
+                                            <div class="event-meta-item">
+                                                <i class="fas fa-map-marker-alt"></i>
+                                                <span>36.7783, -119.4179</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="event-item">
+                                        <div class="event-header">
+                                            <span class="event-type event-flood">🌊 FLOOD</span>
+                                            <span class="event-severity severity-medium">MEDIUM</span>
+                                        </div>
+                                        <div class="event-text">"Flash flood warning issued for Mumbai metropolitan area. Water levels rising rapidly..."</div>
+                                        <div class="event-meta">
+                                            <div class="event-meta-item">
+                                                <i class="fas fa-percentage"></i>
+                                                <span>79.4% confidence</span>
+                                            </div>
+                                            <div class="event-meta-item">
+                                                <i class="fas fa-clock"></i>
+                                                <span>8 minutes ago</span>
+                                            </div>
+                                            <div class="event-meta-item">
+                                                <i class="fas fa-map-marker-alt"></i>
+                                                <span>19.0760, 72.8777</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Prediction Page -->
+                <div id="prediction-page" class="page">
+                    <div class="page-header">
+                        <h1 class="page-title">AI Disaster Prediction Engine</h1>
+                        <p class="page-subtitle">Advanced machine learning models for real-time disaster classification and threat assessment</p>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="card-icon fas fa-robot"></i>
+                                Neural Network Analysis
+                            </h2>
+                        </div>
+                        <div class="card-content">
+                            <div class="input-group">
+                                <label class="input-label" for="prediction-text">
+                                    <i class="fas fa-edit"></i> Enter disaster scenario description:
+                                </label>
+                                <textarea 
+                                    id="prediction-text" 
+                                    class="form-input form-textarea"
+                                    placeholder="Describe the situation: e.g., 'Massive flooding in downtown area, water rising rapidly through the streets, emergency vehicles responding...'"
+                                ></textarea>
+                            </div>
+
+                            <button class="btn" onclick="simulatePrediction()">
+                                <i class="fas fa-brain"></i>
+                                <span>Analyze with AI</span>
+                            </button>
+
+                            <div id="prediction-result-container"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Page -->
+                <div id="analytics-page" class="page">
+                    <div class="page-header">
+                        <h1 class="page-title">Advanced Analytics Suite</h1>
+                        <p class="page-subtitle">Deep insights into disaster patterns, trends, and system performance metrics</p>
+                    </div>
+
+                    <div class="content-grid">
+                        <div class="content-card">
+                            <div class="card-header">
+                                <h2 class="card-title">
+                                    <i class="card-icon fas fa-chart-area"></i>
+                                    24-Hour Activity Timeline
+                                </h2>
+                            </div>
+                            <div class="card-content">
+                                <div id="timeline-chart" class="chart-container"></div>
+                            </div>
+                        </div>
+
+                        <div class="content-card">
+                            <div class="card-header">
+                                <h2 class="card-title">
+                                    <i class="card-icon fas fa-chart-donut"></i>
+                                    Severity Distribution
+                                </h2>
+                            </div>
+                            <div class="card-content">
+                                <div id="severity-chart" class="chart-container"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Events Management Page -->
+                <div id="events-page" class="page">
+                    <div class="page-header">
+                        <h1 class="page-title">Event Management Center</h1>
+                        <p class="page-subtitle">Comprehensive disaster event tracking, classification, and response coordination</p>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="card-icon fas fa-tasks"></i>
+                                Recent Event Registry
+                            </h2>
+                        </div>
+                        <div class="card-content">
+                            <div class="event-list">
+                                <div class="event-item">
+                                    <div class="event-header">
+                                        <span class="event-type event-hurricane">🌀 HURRICANE</span>
+                                        <span class="event-severity severity-critical">CRITICAL</span>
+                                    </div>
+                                    <div class="event-text">"Category 3 hurricane approaching Florida coast. Storm surge warning issued for coastal regions..."</div>
+                                    <div class="event-meta">
+                                        <div class="event-meta-item">
+                                            <i class="fas fa-percentage"></i>
+                                            <span>94.2% confidence</span>
+                                        </div>
+                                        <div class="event-meta-item">
+                                            <i class="fas fa-clock"></i>
+                                            <span>15 minutes ago</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="event-item">
+                                    <div class="event-header">
+                                        <span class="event-type event-tornado">🌪️ TORNADO</span>
+                                        <span class="event-severity severity-high">HIGH</span>
+                                    </div>
+                                    <div class="event-text">"Tornado touchdown confirmed in Oklahoma plains. Take immediate shelter, emergency services deployed..."</div>
+                                    <div class="event-meta">
+                                        <div class="event-meta-item">
+                                            <i class="fas fa-percentage"></i>
+                                            <span>85.7% confidence</span>
+                                        </div>
+                                        <div class="event-meta-item">
+                                            <i class="fas fa-clock"></i>
+                                            <span>22 minutes ago</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="event-item">
+                                    <div class="event-header">
+                                        <span class="event-type event-earthquake">🌍 EARTHQUAKE</span>
+                                        <span class="event-severity severity-medium">MEDIUM</span>
+                                    </div>
+                                    <div class="event-text">"Magnitude 5.8 earthquake detected across Italy. Minor structural damage reported in urban areas..."</div>
+                                    <div class="event-meta">
+                                        <div class="event-meta-item">
+                                            <i class="fas fa-percentage"></i>
+                                            <span>88.1% confidence</span>
+                                        </div>
+                                        <div class="event-meta-item">
+                                            <i class="fas fa-clock"></i>
+                                            <span>35 minutes ago</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <p>🌍 <strong>RescueScope AI</strong> - Advanced Disaster Intelligence Platform 🚁</p>
+                    <p>Powered by Machine Learning • Real-time Analysis • Global Coverage</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentPage = 'overview';
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            console.log('🎯 RescueScope AI Dashboard Loaded Successfully!');
+        });
+
+        // Page navigation with premium transitions
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show selected page
+            document.getElementById(pageId + '-page').classList.add('active');
+            
+            // Update nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.nav-item').classList.add('active');
+            
+            // Update breadcrumb
+            const pageNames = {
+                'overview': 'Overview',
+                'prediction': 'AI Prediction',
+                'analytics': 'Analytics',
+                'events': 'Event Management'
+            };
+            document.getElementById('current-page').textContent = pageNames[pageId];
+            
+            currentPage = pageId;
+            
+            // Load page-specific data
+            if (pageId === 'analytics') {
+                loadAnalytics();
+            }
+        }
+
+        // Initialize charts with premium styling
+        function initializeCharts() {
+            // Disaster distribution chart
+            const disasterData = [{
+                values: [456, 231, 189, 134, 87, 150],
+                labels: ['EARTHQUAKE', 'WILDFIRE', 'FLOOD', 'HURRICANE', 'TORNADO', 'OTHER'],
+                type: 'pie',
+                hole: 0.4,
+                marker: {
+                    colors: ['#ea4335', '#ff6d01', '#1a73e8', '#6c757d', '#8b4513', '#34a853']
+                },
+                textinfo: 'label+percent',
+                textposition: 'outside',
+                textfont: {
+                    family: 'Inter, sans-serif',
+                    size: 12,
+                    color: '#0f172a'
+                }
+            }];
+            
+            const disasterLayout = {
+                showlegend: true,
+                height: 350,
+                margin: { t: 20, b: 20, l: 20, r: 20 },
+                font: { family: 'Inter, sans-serif', size: 12, color: '#0f172a' },
+                legend: {
+                    orientation: "v",
+                    x: 1.02,
+                    y: 0.5
+                },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)'
+            };
+            
+            Plotly.newPlot('disaster-chart', disasterData, disasterLayout, {responsive: true, displayModeBar: false});
+        }
+
+        // Load analytics charts
+        function loadAnalytics() {
+            // Timeline chart with premium styling
+            const timelineData = [{
+                x: Array.from({length: 24}, (_, i) => `${i}:00`),
+                y: [3, 2, 1, 1, 2, 4, 8, 12, 15, 18, 22, 19, 16, 14, 11, 9, 12, 15, 18, 21, 16, 12, 8, 5],
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { 
+                    color: '#1a73e8', 
+                    width: 3,
+                    shape: 'spline'
+                },
+                marker: { 
+                    color: '#1a73e8', 
+                    size: 8,
+                    line: {
+                        color: '#ffffff',
+                        width: 2
+                    }
+                },
+                fill: 'tozeroy',
+                fillcolor: 'rgba(26, 115, 232, 0.1)'
+            }];
+            
+            const timelineLayout = {
+                title: {
+                    text: 'Event Detection Pattern',
+                    font: { family: 'Inter, sans-serif', size: 16, color: '#0f172a' }
+                },
+                xaxis: { 
+                    title: 'Hour of Day',
+                    gridcolor: '#e2e8f0',
+                    gridwidth: 1
+                },
+                yaxis: { 
+                    title: 'Event Count',
+                    gridcolor: '#e2e8f0',
+                    gridwidth: 1
+                },
+                height: 350,
+                margin: { t: 40, b: 60, l: 60, r: 40 },
+                font: { family: 'Inter, sans-serif', color: '#0f172a' },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)'
+            };
+            
+            Plotly.newPlot('timeline-chart', timelineData, timelineLayout, {responsive: true, displayModeBar: false});
+            
+            // Severity distribution
+            const severityData = [{
+                values: [45, 123, 189, 234],
+                labels: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'],
+                type: 'pie',
+                hole: 0.4,
+                marker: {
+                    colors: ['#ea4335', '#ff6d01', '#fbbc04', '#34a853']
+                },
+                textinfo: 'label+percent',
+                textfont: {
+                    family: 'Inter, sans-serif',
+                    size: 12,
+                    color: '#0f172a'
+                }
+            }];
+            
+            const severityLayout = {
+                title: {
+                    text: 'Severity Classification',
+                    font: { family: 'Inter, sans-serif', size: 16, color: '#0f172a' }
+                },
+                height: 350,
+                margin: { t: 40, b: 20, l: 20, r: 20 },
+                font: { family: 'Inter, sans-serif', color: '#0f172a' },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)'
+            };
+            
+            Plotly.newPlot('severity-chart', severityData, severityLayout, {responsive: true, displayModeBar: false});
+        }
+
+        // REAL AI disaster prediction with premium UI
+        async function simulatePrediction() {
+            const text = document.getElementById('prediction-text').value.trim();
+            
+            if (!text) {
+                alert('Please enter a disaster scenario description to analyze!');
+                return;
+            }
+            
+            const container = document.getElementById('prediction-result-container');
+            
+            // Premium loading state
+            container.innerHTML = `
+                <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <div style="width: 60px; height: 60px; margin: 0 auto 1.5rem; border: 4px solid var(--border-light); border-top: 4px solid var(--brand-primary); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    <h3 style="margin-bottom: 0.5rem; color: var(--text-primary);">Analyzing with Neural Networks...</h3>
+                    <p>Processing multimodal disaster classification</p>
+                </div>
+            `;
+            
+            try {
+                // Call real backend API
+                const startTime = Date.now();
+                const response = await fetch('http://localhost:8000/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+                
+                const processingTime = Date.now() - startTime;
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                // Map disaster types to icons
+                const disasterIcons = {
+                    'earthquake': '🌍',
+                    'fire': '🔥',
+                    'flood': '🌊',
+                    'hurricane': '🌀',
+                    'tornado': '🌪️',
+                    'other': '⚠️'
+                };
+                
+                const icon = disasterIcons[result.top_prediction.toLowerCase()] || '⚠️';
+                
+                container.innerHTML = `
+                    <div class="prediction-result">
+                        <div class="result-header">
+                            <div class="result-icon">${icon}</div>
+                            <div class="result-title">🤖 AI Analysis Complete</div>
+                        </div>
+                        <div class="result-grid">
+                            <div class="result-item">
+                                <div class="result-value" style="color: var(--brand-primary);">${icon}</div>
+                                <div class="result-label">${result.top_prediction.toUpperCase()}</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-value" style="color: var(--brand-secondary);">${(result.confidence_score * 100).toFixed(1)}%</div>
+                                <div class="result-label">Confidence</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-value" style="color: var(--brand-warning);">${result.severity.toUpperCase()}</div>
+                                <div class="result-label">Severity</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-value" style="color: var(--brand-accent);">${result.processing_time_ms.toFixed(1)}ms</div>
+                                <div class="result-label">Processing Time</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(26, 115, 232, 0.05); border-radius: 8px; font-size: 0.925rem; color: var(--text-secondary);">
+                            <strong>✅ Neural Network Analysis:</strong> RescueScope AI successfully classified the scenario using advanced machine learning models at localhost:8000
+                        </div>
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('API Error:', error);
+                
+                // Premium error display
+                container.innerHTML = `
+                    <div style="background: linear-gradient(135deg, rgba(234, 67, 53, 0.05), rgba(234, 67, 53, 0.02)); border: 2px solid var(--brand-danger); border-radius: 12px; padding: 2rem; margin-top: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                            <div style="width: 48px; height: 48px; background: var(--brand-danger); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div>
+                                <h3 style="color: var(--brand-danger); margin-bottom: 0.25rem;">Backend Connection Failed</h3>
+                                <p style="color: var(--text-secondary); margin: 0;">Unable to connect to RescueScope AI backend services</p>
+                            </div>
+                        </div>
+                        <div style="background: white; padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-light);">
+                            <p style="margin-bottom: 1rem; color: var(--text-primary);"><strong>Error Details:</strong></p>
+                            <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.875rem; color: var(--brand-danger); margin-bottom: 1.5rem;">Could not connect to http://localhost:8000/predict<br>Error: ${error.message}</p>
+                            <div style="background: var(--surface-tertiary); padding: 1rem; border-radius: 6px;">
+                                <p style="margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary);">Troubleshooting Steps:</p>
+                                <ol style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary);">
+                                    <li>Verify backend server is running on port 8000</li>
+                                    <li>Check CORS configuration in backend settings</li>
+                                    <li>Confirm /predict endpoint is available</li>
+                                    <li>Test connection: <code>curl -X POST http://localhost:8000/health</code></li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Premium navigation enhancements
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        console.log('🎯 RescueScope AI - Premium Dashboard initialized successfully!');
+        console.log('🧠 Features: Advanced AI analysis, Real-time monitoring, Premium UI/UX');
+        console.log('🔗 Backend API: http://localhost:8000');
+    </script>
+</body>
+</html>
