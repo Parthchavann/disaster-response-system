@@ -1,0 +1,16 @@
+[phases.setup]
+nixPkgs = ["...", "python312"]
+
+[phases.install]
+cmds = ["pip install -r requirements-cloud.txt"]
+
+[phases.build]
+cmds = ["echo 'NEXUS Intelligence System build complete'"]
+
+[start]
+cmd = "python3 standalone_live_dashboard.py"
+
+[variables]
+NODE_ENV = "production"
+PORT = "8503"
+HOST = "0.0.0.0"

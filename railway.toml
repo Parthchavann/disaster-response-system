@@ -1,0 +1,30 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+healthcheckPath = "/api/live-data"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+[[services]]
+name = "nexus-intelligence"
+
+[services.source]
+repo = "Parthchavann/disaster-response-system"
+branch = "main"
+
+[services.variables]
+NODE_ENV = "production"
+PORT = "8503"
+HOST = "0.0.0.0"
+NEXUS_MODE = "production"
+DASHBOARD_TITLE = "NEXUS: Real-Time Multimodal Disaster Intelligence System"
+ENABLE_LIVE_DATA = "true"
+ENABLE_MOCK_DATA = "true"
+LOG_LEVEL = "INFO"
+
+[services.healthcheck]
+path = "/api/live-data"
+intervalSeconds = 30
+timeoutSeconds = 10

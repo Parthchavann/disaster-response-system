@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: nexus-intelligence
+    env: python
+    plan: free
+    region: oregon
+    branch: main
+    repo: https://github.com/Parthchavann/disaster-response-system
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python3 standalone_live_dashboard.py"
+    healthCheckPath: "/api/live-data"
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8503
+      - key: HOST
+        value: 0.0.0.0
+      - key: NEXUS_MODE
+        value: production
+      - key: DASHBOARD_TITLE
+        value: "NEXUS: Real-Time Multimodal Disaster Intelligence System"
+      - key: ENABLE_LIVE_DATA
+        value: "true"
+      - key: ENABLE_MOCK_DATA
+        value: "true"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: API_BASE_URL
+        value: "http://localhost:9999"
+      - key: DASHBOARD_UPDATE_INTERVAL
+        value: "5000"

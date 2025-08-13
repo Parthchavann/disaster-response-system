@@ -1,0 +1,34 @@
+{
+  "name": "nexus-intelligence",
+  "version": 2,
+  "builds": [
+    {
+      "src": "standalone_live_dashboard.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "50mb"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "standalone_live_dashboard.py"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "NEXUS_MODE": "production",
+    "DASHBOARD_TITLE": "NEXUS: Real-Time Multimodal Disaster Intelligence System",
+    "ENABLE_LIVE_DATA": "true",
+    "ENABLE_MOCK_DATA": "true",
+    "LOG_LEVEL": "INFO",
+    "API_BASE_URL": "http://localhost:9999",
+    "DASHBOARD_UPDATE_INTERVAL": "5000"
+  },
+  "functions": {
+    "standalone_live_dashboard.py": {
+      "runtime": "python3.9"
+    }
+  }
+}

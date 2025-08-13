@@ -1,0 +1,1 @@
+web: python3 standalone_live_dashboard.py

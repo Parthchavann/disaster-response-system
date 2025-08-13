@@ -1163,4 +1163,8 @@ def run_live_dashboard_server(host='localhost', port=8503):
         server.server_close()
 
 if __name__ == "__main__":
-    run_live_dashboard_server()
+    import os
+    # Get port from environment variable (for cloud deployments)
+    port = int(os.environ.get('PORT', 8503))
+    host = os.environ.get('HOST', '0.0.0.0')
+    run_live_dashboard_server(host, port)

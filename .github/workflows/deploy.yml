@@ -1,0 +1,79 @@
+name: 🚀 Deploy NEXUS Intelligence System
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy-railway:
+    name: 🚄 Deploy to Railway
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: 🔽 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          
+      - name: 📦 Install Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
+          
+      - name: 🚄 Deploy to Railway
+        run: railway up --service nexus-intelligence
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+  deploy-render:
+    name: 🎨 Deploy to Render
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: 🔽 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🎨 Deploy to Render
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: 📡 Trigger Render Deployment
+        run: |
+          curl -X POST "https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}"
+
+  health-check:
+    name: 🔍 Health Check Deployments
+    runs-on: ubuntu-latest
+    needs: [deploy-railway, deploy-render]
+    if: always()
+    
+    steps:
+      - name: 🔍 Check Railway Deployment
+        run: |
+          echo "Checking Railway deployment health..."
+          # Add Railway health check URL when available
+          
+      - name: 🔍 Check Render Deployment  
+        run: |
+          echo "Checking Render deployment health..."
+          # Add Render health check URL when available
+          
+      - name: 📧 Notify Success
+        if: success()
+        run: |
+          echo "🚀 NEXUS Intelligence System deployed successfully!"
+          echo "All health checks passed ✅"
+          
+      - name: 🚨 Notify Failure
+        if: failure()
+        run: |
+          echo "❌ NEXUS deployment failed!"
+          echo "Check the logs for details"

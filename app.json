@@ -1,0 +1,76 @@
+{
+  "name": "NEXUS Intelligence System",
+  "description": "🔮 Real-Time Multimodal Disaster Intelligence System with Advanced AI Analytics",
+  "keywords": [
+    "disaster-response",
+    "artificial-intelligence",
+    "real-time-analytics",
+    "emergency-management",
+    "multimodal-intelligence",
+    "nexus"
+  ],
+  "website": "https://github.com/Parthchavann/disaster-response-system",
+  "repository": "https://github.com/Parthchavann/disaster-response-system",
+  "logo": "https://img.icons8.com/fluent/96/000000/artificial-intelligence.png",
+  "success_url": "/",
+  "stack": "heroku-22",
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "image": "heroku/python",
+  "addons": [],
+  "env": {
+    "NODE_ENV": {
+      "description": "Environment mode",
+      "value": "production",
+      "required": true
+    },
+    "PORT": {
+      "description": "Port for the web service",
+      "value": "8503"
+    },
+    "HOST": {
+      "description": "Host address",
+      "value": "0.0.0.0"
+    },
+    "NEXUS_MODE": {
+      "description": "NEXUS operation mode",
+      "value": "production"
+    },
+    "DASHBOARD_TITLE": {
+      "description": "Dashboard title",
+      "value": "NEXUS: Real-Time Multimodal Disaster Intelligence System"
+    },
+    "ENABLE_LIVE_DATA": {
+      "description": "Enable live data updates",
+      "value": "true"
+    },
+    "ENABLE_MOCK_DATA": {
+      "description": "Enable mock data generation",
+      "value": "true"
+    },
+    "LOG_LEVEL": {
+      "description": "Logging level",
+      "value": "INFO"
+    },
+    "API_BASE_URL": {
+      "description": "Backend API URL",
+      "value": "http://localhost:9999"
+    },
+    "DASHBOARD_UPDATE_INTERVAL": {
+      "description": "Update interval in milliseconds",
+      "value": "5000"
+    }
+  },
+  "scripts": {
+    "postdeploy": "echo 'NEXUS Intelligence System deployed successfully!'"
+  }
+}
