@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚨 Disaster Response Dashboard - Premium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #ff4b4b;
+            --secondary-color: #0066cc;
+            --accent-color: #00d4aa;
+            --background-color: #ffffff;
+            --surface-color: #f8f9fa;
+            --text-primary: #262730;
+            --text-secondary: #6c757d;
+            --border-color: #e9ecef;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --sidebar-width: 280px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .streamlit-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, #ff4b4b 0%, #ff6b6b 100%);
+            color: white;
+            padding: 2rem 1.5rem;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sidebar-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section h3 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+            opacity: 0.8;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            margin: 0.25rem 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: white;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.2);
+            font-weight: 600;
+        }
+
+        .system-status {
+            background: rgba(255,255,255,0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 2rem 3rem;
+            max-width: calc(100vw - var(--sidebar-width));
+        }
+
+        .header {
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .metric-card {
+            background: var(--surface-color);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+
+        .metric-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .metric-change {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .metric-change.positive {
+            background: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+        }
+
+        .metric-change.negative {
+            background: rgba(220, 53, 69, 0.1);
+            color: var(--danger-color);
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .card-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--surface-color);
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-content {
+            padding: 2rem;
+        }
+
+        /* Interactive Elements */
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(255, 75, 75, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary-color), #ff6b6b);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 75, 75, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary-color), #0080ff);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color), #34ce57);
+        }
+
+        /* Event List */
+        .event-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .event-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .event-item:hover {
+            background: var(--surface-color);
+            margin: 0 -1rem;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .event-type {
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .event-earthquake { background: rgba(220, 53, 69, 0.1); color: var(--danger-color); }
+        .event-fire { background: rgba(255, 193, 7, 0.1); color: #e67e22; }
+        .event-flood { background: rgba(0, 123, 255, 0.1); color: var(--secondary-color); }
+        .event-hurricane { background: rgba(108, 117, 125, 0.1); color: #6c757d; }
+        .event-tornado { background: rgba(111, 66, 193, 0.1); color: #6f42c1; }
+
+        .event-severity {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .severity-critical { background: var(--danger-color); color: white; }
+        .severity-high { background: #fd7e14; color: white; }
+        .severity-medium { background: var(--warning-color); color: #212529; }
+        .severity-low { background: var(--success-color); color: white; }
+
+        .event-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .event-meta {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            height: 400px;
+            margin-top: 1rem;
+        }
+
+        /* Prediction Results */
+        .prediction-result {
+            background: linear-gradient(135deg, rgba(0, 212, 170, 0.1), rgba(0, 212, 170, 0.05));
+            border: 2px solid var(--accent-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .result-icon {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+        }
+
+        .result-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .result-item {
+            text-align: center;
+        }
+
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .result-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 4rem;
+            padding: 2rem 0;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+                max-width: 100vw;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+        }
+
+        .notification {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .notification-icon {
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="streamlit-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-title">
+                <i class="fas fa-shield-alt"></i>
+                Disaster Response
+            </div>
+            <div class="sidebar-subtitle">
+                Real-time monitoring and analysis platform
+            </div>
+
+            <nav class="nav-section">
+                <h3>Navigation</h3>
+                <div class="nav-item active" onclick="showPage('overview')">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Overview
+                </div>
+                <div class="nav-item" onclick="showPage('prediction')">
+                    <i class="fas fa-brain"></i>
+                    Prediction
+                </div>
+                <div class="nav-item" onclick="showPage('analytics')">
+                    <i class="fas fa-chart-line"></i>
+                    Analytics
+                </div>
+                <div class="nav-item" onclick="showPage('events')">
+                    <i class="fas fa-list"></i>
+                    Recent Events
+                </div>
+            </nav>
+
+            <div class="system-status">
+                <h3 style="margin-bottom: 1rem;">System Status</h3>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span id="system-status-text">All systems operational</span>
+                </div>
+                <div style="font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.8;">
+                    <span id="events-processed">1,247</span> events processed
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Notification -->
+            <div class="notification">
+                <i class="fas fa-info-circle notification-icon"></i>
+                <div>
+                    <strong>Demo Mode:</strong> This is a standalone version of the Premium Streamlit Dashboard with sample data. 
+                    Backend API available at <strong>localhost:8000</strong>
+                </div>
+            </div>
+
+            <!-- Overview Page -->
+            <div id="overview-page" class="page">
+                <div class="header">
+                    <h1 class="page-title">🚨 Disaster Response Dashboard</h1>
+                    <p class="page-subtitle">Real-time monitoring and AI-powered disaster detection system</p>
+                </div>
+
+                <!-- Metrics -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="metric-value">1,247</div>
+                        <div class="metric-label">Total Events</div>
+                        <div class="metric-change positive">+12% today</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon"><i class="fas fa-bell"></i></div>
+                        <div class="metric-value">23</div>
+                        <div class="metric-label">Active Alerts</div>
+                        <div class="metric-change negative">-3 from yesterday</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon"><i class="fas fa-globe-americas"></i></div>
+                        <div class="metric-value">195</div>
+                        <div class="metric-label">Regions Monitored</div>
+                        <div class="metric-change positive">Global coverage</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon"><i class="fas fa-percentage"></i></div>
+                        <div class="metric-value">99.9%</div>
+                        <div class="metric-label">System Uptime</div>
+                        <div class="metric-change positive">Last 30 days</div>
+                    </div>
+                </div>
+
+                <!-- Content Grid -->
+                <div class="content-grid">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-chart-bar"></i>
+                                Disaster Type Distribution
+                            </h2>
+                        </div>
+                        <div class="card-content">
+                            <div id="disaster-chart" class="chart-container"></div>
+                        </div>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-clock"></i>
+                                Recent Events
+                            </h2>
+                        </div>
+                        <div class="card-content">
+                            <div id="recent-events-list" class="event-list">
+                                <div class="event-item">
+                                    <div class="event-header">
+                                        <span class="event-type event-earthquake">🌍 EARTHQUAKE</span>
+                                        <span class="event-severity severity-high">HIGH</span>
+                                    </div>
+                                    <div class="event-text">"Magnitude 6.2 earthquake detected near Tokyo, Japan. Buildings shaking..."</div>
+                                    <div class="event-meta">
+                                        <span><i class="fas fa-percentage"></i> 92.3% confidence</span>
+                                        <span><i class="fas fa-clock"></i> 2 minutes ago</span>
+                                        <span><i class="fas fa-map-marker-alt"></i> 35.6762, 139.6503</span>
+                                    </div>
+                                </div>
+                                <div class="event-item">
+                                    <div class="event-header">
+                                        <span class="event-type event-fire">🔥 FIRE</span>
+                                        <span class="event-severity severity-critical">CRITICAL</span>
+                                    </div>
+                                    <div class="event-text">"Wildfire spreading rapidly through California forests. Evacuation ordered..."</div>
+                                    <div class="event-meta">
+                                        <span><i class="fas fa-percentage"></i> 87.1% confidence</span>
+                                        <span><i class="fas fa-clock"></i> 5 minutes ago</span>
+                                        <span><i class="fas fa-map-marker-alt"></i> 36.7783, -119.4179</span>
+                                    </div>
+                                </div>
+                                <div class="event-item">
+                                    <div class="event-header">
+                                        <span class="event-type event-flood">🌊 FLOOD</span>
+                                        <span class="event-severity severity-medium">MEDIUM</span>
+                                    </div>
+                                    <div class="event-text">"Flash flood warning issued for Mumbai metropolitan area. Water rising..."</div>
+                                    <div class="event-meta">
+                                        <span><i class="fas fa-percentage"></i> 79.4% confidence</span>
+                                        <span><i class="fas fa-clock"></i> 8 minutes ago</span>
+                                        <span><i class="fas fa-map-marker-alt"></i> 19.0760, 72.8777</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prediction Page -->
+            <div id="prediction-page" class="page" style="display: none;">
+                <div class="header">
+                    <h1 class="page-title">🔮 Disaster Prediction</h1>
+                    <p class="page-subtitle">AI-powered disaster detection from text descriptions</p>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-brain"></i>
+                            Analyze Text for Disaster Detection
+                        </h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="input-group">
+                            <label class="input-label" for="prediction-text">
+                                Enter text describing a potential disaster situation:
+                            </label>
+                            <textarea 
+                                id="prediction-text" 
+                                class="form-input form-textarea"
+                                placeholder="e.g., 'Massive flooding in downtown area, water rising rapidly through the streets'"
+                            ></textarea>
+                        </div>
+
+                        <button class="btn" onclick="simulatePrediction()">
+                            <i class="fas fa-magic"></i>
+                            Analyze Text (Demo)
+                        </button>
+
+                        <div id="prediction-result-container"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Page -->
+            <div id="analytics-page" class="page" style="display: none;">
+                <div class="header">
+                    <h1 class="page-title">📊 Analytics & Insights</h1>
+                    <p class="page-subtitle">Deep insights into disaster patterns and system performance</p>
+                </div>
+
+                <div class="content-grid">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-chart-line"></i>
+                                Event Timeline
+                            </h2>
+                        </div>
+                        <div class="card-content">
+                            <div id="timeline-chart" class="chart-container"></div>
+                        </div>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-pie-chart"></i>
+                                Severity Distribution
+                            </h2>
+                        </div>
+                        <div class="card-content">
+                            <div id="severity-chart" class="chart-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Page -->
+            <div id="events-page" class="page" style="display: none;">
+                <div class="header">
+                    <h1 class="page-title">📋 Event Management</h1>
+                    <p class="page-subtitle">Browse, filter, and analyze disaster events</p>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-list"></i>
+                            All Recent Events
+                        </h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="event-list">
+                            <div class="event-item">
+                                <div class="event-header">
+                                    <span class="event-type event-hurricane">🌀 HURRICANE</span>
+                                    <span class="event-severity severity-critical">CRITICAL</span>
+                                </div>
+                                <div class="event-text">"Category 3 hurricane approaching Florida coast. Storm surge warning issued..."</div>
+                                <div class="event-meta">
+                                    <span><i class="fas fa-percentage"></i> 94.2% confidence</span>
+                                    <span><i class="fas fa-clock"></i> 15 minutes ago</span>
+                                </div>
+                            </div>
+                            <div class="event-item">
+                                <div class="event-header">
+                                    <span class="event-type event-tornado">🌪️ TORNADO</span>
+                                    <span class="event-severity severity-high">HIGH</span>
+                                </div>
+                                <div class="event-text">"Tornado touchdown confirmed in Oklahoma plains. Take cover immediately..."</div>
+                                <div class="event-meta">
+                                    <span><i class="fas fa-percentage"></i> 85.7% confidence</span>
+                                    <span><i class="fas fa-clock"></i> 22 minutes ago</span>
+                                </div>
+                            </div>
+                            <div class="event-item">
+                                <div class="event-header">
+                                    <span class="event-type event-earthquake">🌍 EARTHQUAKE</span>
+                                    <span class="event-severity severity-medium">MEDIUM</span>
+                                </div>
+                                <div class="event-text">"Magnitude 5.8 earthquake felt across Italy. Minor damage reported..."</div>
+                                <div class="event-meta">
+                                    <span><i class="fas fa-percentage"></i> 88.1% confidence</span>
+                                    <span><i class="fas fa-clock"></i> 35 minutes ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer">
+                <p>🌊🔥🌍🌀🌪️ Disaster Response System - Premium Streamlit Dashboard 🌪️🌀🌍🔥🌊</p>
+                <p>Standalone Demo Version • Backend API: <strong>localhost:8000</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentPage = 'overview';
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            console.log('Premium Streamlit Dashboard Loaded Successfully!');
+        });
+
+        // Page navigation
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.style.display = 'none';
+            });
+            
+            // Show selected page
+            document.getElementById(pageId + '-page').style.display = 'block';
+            
+            // Update nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentPage = pageId;
+            
+            // Load page-specific data
+            if (pageId === 'analytics') {
+                loadAnalytics();
+            }
+        }
+
+        // Initialize charts with sample data
+        function initializeCharts() {
+            // Disaster distribution chart
+            const disasterData = [{
+                values: [456, 231, 189, 134, 87, 150],
+                labels: ['EARTHQUAKE', 'FIRE', 'FLOOD', 'HURRICANE', 'TORNADO', 'OTHER'],
+                type: 'pie',
+                hole: 0.3,
+                marker: {
+                    colors: ['#dc3545', '#ffc107', '#007bff', '#6c757d', '#6f42c1', '#28a745']
+                },
+                textinfo: 'label+percent',
+                textposition: 'outside'
+            }];
+            
+            const disasterLayout = {
+                showlegend: true,
+                height: 350,
+                margin: { t: 20, b: 20, l: 20, r: 20 },
+                font: { family: 'Inter, sans-serif', size: 12 }
+            };
+            
+            Plotly.newPlot('disaster-chart', disasterData, disasterLayout, {responsive: true});
+        }
+
+        // Load analytics charts
+        function loadAnalytics() {
+            // Timeline chart
+            const timelineData = [{
+                x: Array.from({length: 24}, (_, i) => `${i}:00`),
+                y: [3, 2, 1, 1, 2, 4, 8, 12, 15, 18, 22, 19, 16, 14, 11, 9, 12, 15, 18, 21, 16, 12, 8, 5],
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { color: '#ff4b4b', width: 3 },
+                marker: { color: '#ff4b4b', size: 6 },
+                fill: 'tozeroy',
+                fillcolor: 'rgba(255, 75, 75, 0.1)'
+            }];
+            
+            const timelineLayout = {
+                title: 'Events Over Time (24h)',
+                xaxis: { title: 'Hour of Day' },
+                yaxis: { title: 'Event Count' },
+                height: 350,
+                margin: { t: 40, b: 60, l: 60, r: 40 },
+                font: { family: 'Inter, sans-serif' }
+            };
+            
+            Plotly.newPlot('timeline-chart', timelineData, timelineLayout, {responsive: true});
+            
+            // Severity distribution
+            const severityData = [{
+                values: [45, 123, 189, 234],
+                labels: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'],
+                type: 'pie',
+                marker: {
+                    colors: ['#dc3545', '#fd7e14', '#ffc107', '#28a745']
+                },
+                textinfo: 'label+percent'
+            }];
+            
+            const severityLayout = {
+                title: 'Event Severity Distribution',
+                height: 350,
+                margin: { t: 40, b: 20, l: 20, r: 20 },
+                font: { family: 'Inter, sans-serif' }
+            };
+            
+            Plotly.newPlot('severity-chart', severityData, severityLayout, {responsive: true});
+        }
+
+        // Simulate disaster prediction
+        function simulatePrediction() {
+            const text = document.getElementById('prediction-text').value.trim();
+            
+            if (!text) {
+                alert('Please enter some text to analyze!');
+                return;
+            }
+            
+            const container = document.getElementById('prediction-result-container');
+            
+            // Simulate processing
+            container.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i><br>
+                    Analyzing text with AI models...
+                </div>
+            `;
+            
+            // Simulate API delay
+            setTimeout(() => {
+                const mockResults = [
+                    { type: 'earthquake', confidence: 0.89, severity: 'high', icon: '🌍' },
+                    { type: 'fire', confidence: 0.94, severity: 'critical', icon: '🔥' },
+                    { type: 'flood', confidence: 0.76, severity: 'medium', icon: '🌊' },
+                    { type: 'hurricane', confidence: 0.82, severity: 'high', icon: '🌀' },
+                    { type: 'tornado', confidence: 0.71, severity: 'medium', icon: '🌪️' }
+                ];
+                
+                const randomResult = mockResults[Math.floor(Math.random() * mockResults.length)];
+                
+                container.innerHTML = `
+                    <div class="prediction-result">
+                        <div class="result-header">
+                            <div class="result-icon">${randomResult.icon}</div>
+                            <div class="result-title">Prediction Results</div>
+                        </div>
+                        <div class="result-grid">
+                            <div class="result-item">
+                                <div class="result-value" style="color: var(--primary-color);">${randomResult.icon}</div>
+                                <div class="result-label">${randomResult.type.toUpperCase()}</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-value" style="color: var(--accent-color);">${(randomResult.confidence * 100).toFixed(1)}%</div>
+                                <div class="result-label">Confidence</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-value" style="color: var(--warning-color);">${randomResult.severity.toUpperCase()}</div>
+                                <div class="result-label">Severity</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-value" style="color: var(--secondary-color);">47ms</div>
+                                <div class="result-label">Processing Time</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-secondary);">
+                            <strong>Note:</strong> This is a demo simulation. Connect to backend API at localhost:8000 for real predictions.
+                        </div>
+                    </div>
+                `;
+            }, 2000);
+        }
+
+        // Add smooth transitions for navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        console.log('🚨 Premium Streamlit Dashboard initialized successfully!');
+        console.log('📊 Features: Interactive charts, real-time data, beautiful UI');
+        console.log('🔌 Backend API available at: localhost:8000');
+    </script>
+</body>
+</html>
