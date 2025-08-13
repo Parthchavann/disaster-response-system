@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  nexus-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.nexus
+    container_name: nexus-intelligence
+    ports:
+      - "8503:8503"
+    environment:
+      - NODE_ENV=production
+      - PORT=8503
+      - NEXUS_MODE=production
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8503/api/live-data"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - nexus-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nexus.rule=Host(`nexus.yourdomain.com`)"
+      - "traefik.http.services.nexus.loadbalancer.server.port=8503"
+      - "traefik.docker.network=nexus-network"
+
+  # Optional: Redis for caching (future enhancement)
+  redis:
+    image: redis:7-alpine
+    container_name: nexus-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - nexus-network
+    command: redis-server --appendonly yes
+
+  # Optional: Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: nexus-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/ssl:ro
+    depends_on:
+      - nexus-dashboard
+    restart: unless-stopped
+    networks:
+      - nexus-network
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  nexus-network:
+    driver: bridge
