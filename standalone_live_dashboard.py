@@ -206,7 +206,7 @@ class LiveDashboardHandler(BaseHTTPRequestHandler):
     <title>🔮 NEXUS: Real-Time Multimodal Disaster Intelligence System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <style>
         :root {
             --primary-color: #1e3a8a;
