@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: rescuescope-ai
+    env: python
+    plan: free
+    region: oregon
+    branch: main
+    repo: https://github.com/Parthchavann/disaster-response-system
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python3 rescuescope_complete.py"
+    healthCheckPath: "/health"
+    autoDeploy: true
+    envVars:
+      - key: RESCUESCOPE_HOST
+        value: "0.0.0.0"
+      - key: RESCUESCOPE_PORT
+        value: "8519" 
+      - key: RESCUESCOPE_DEBUG
+        value: "false"
+      - key: USGS_API_TIMEOUT
+        value: "30"
+      - key: CACHE_DURATION
+        value: "300"
+      - key: MAX_EVENTS
+        value: "1000"
+      - key: ALERT_THRESHOLD
+        value: "5.5"
+      - key: LOG_LEVEL
+        value: "INFO"

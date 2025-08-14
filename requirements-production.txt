@@ -1,0 +1,26 @@
+# RescueScope AI - Production Requirements (Minimal)
+# Essential dependencies for production deployment
+
+# Core HTTP and API
+requests>=2.31.0
+urllib3>=2.0.0
+
+# Production Server (if using gunicorn instead of built-in server)
+gunicorn>=21.2.0
+gevent>=23.9.0
+
+# Monitoring and Health Checks
+prometheus-client>=0.19.0
+psutil>=5.9.0
+
+# Logging and Configuration
+structlog>=23.2.0
+python-dotenv>=1.0.0
+
+# Security
+cryptography>=41.0.0
+
+# Development and Testing (optional for production)
+pytest>=7.4.0
+black>=23.11.0
+flake8>=6.1.0
